@@ -1,2 +1,4 @@
 *.env
 event-ingestion-service
+*.docx
+*.sh

@@ -4,10 +4,13 @@ import (
 	"context"
 	"event-ingestion-service/internal/httpserver"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -15,11 +18,15 @@ func main() {
 	ctx, close := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer close()
 
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading environment variables")
+	}
+
 	server := httpserver.New(os.Getenv("PORT"))
 
 	go func() {
-		if err := server.Start(); err != nil {
-			log.Fatal("Failed starting the server")
+		if err := server.Start(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Failed starting the server: %s\r\n", err.Error())
 		}
 	}()
 
@@ -29,6 +36,8 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Graceful shutdown failed: %v", err)
+		log.Printf("\nGraceful shutdown failed: %v\r\n", err)
 	}
+
+	log.Printf("\nGraceful shutdown successful\r\n")
 }
