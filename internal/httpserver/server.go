@@ -21,7 +21,7 @@ func New(s string, bufferSize int, ctx context.Context) *Server {
 	batcher.Start(ingestor, ctx)
 
 	mux.HandleFunc("/healthz", handlers.Healthz())
-	mux.HandleFunc("/get-api-key", handlers.APIKeyGen())
+	mux.HandleFunc("/api-key", handlers.APIKeyGen())
 	mux.HandleFunc("/events", middleware.APIKeyMiddleware(handlers.EventHandler(ingestor)))
 
 	return &Server{

@@ -12,4 +12,4 @@ type APIKey struct {
 	RateLimit   int // events/sec
 }
 
-var APIKeys map[string]*APIKey
+var APIKeys map[string]*APIKey = map[string]*APIKey{}

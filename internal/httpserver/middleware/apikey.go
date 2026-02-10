@@ -41,7 +41,6 @@ func APIKeyMiddleware(next http.Handler) http.HandlerFunc {
 func bearerToken(r *http.Request) ([]byte, error) {
 	rawToken := r.Header.Get("Authorization")
 	pieces := strings.SplitN(rawToken, " ", 2)
-
 	if len(pieces) < 2 {
 		return []byte{}, errors.New("token with incorrect bearer format")
 	}

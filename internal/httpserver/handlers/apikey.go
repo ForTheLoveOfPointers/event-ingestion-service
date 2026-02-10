@@ -29,7 +29,7 @@ func APIKeyGen() http.HandlerFunc {
 			http.Error(w, "unable to generate api key", http.StatusInternalServerError)
 			return
 		}
-		apiKey := storage.APIKey{
+		apiKey := &storage.APIKey{
 			KeyHash:     hash,
 			Producer:    req.Producer,
 			Environment: req.Environment,
@@ -37,7 +37,7 @@ func APIKeyGen() http.HandlerFunc {
 			CreatedAt:   time.Now(),
 		}
 
-		storage.APIKeys[string(hash)] = &apiKey
+		storage.APIKeys[string(hash)] = apiKey
 
 		json.NewEncoder(w).Encode(map[string]string{
 			"api_key": raw,
