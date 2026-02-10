@@ -30,7 +30,7 @@ func main() {
 		bufferSz = 50
 	}
 
-	server := httpserver.New(os.Getenv("PORT"), bufferSz)
+	server := httpserver.New(os.Getenv("PORT"), bufferSz, ctx)
 	go func() {
 		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed starting the server: %s\r\n", err.Error())

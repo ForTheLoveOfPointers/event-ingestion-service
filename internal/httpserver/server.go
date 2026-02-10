@@ -14,9 +14,11 @@ type Server struct {
 	ingestor   *ingest.Ingest
 }
 
-func New(s string, bufferSize int) *Server {
+func New(s string, bufferSize int, ctx context.Context) *Server {
 	mux := http.NewServeMux()
 	ingestor := ingest.New(bufferSize)
+	batcher := ingest.Make(100, time.Second)
+	batcher.Start(ingestor, ctx)
 
 	mux.HandleFunc("/healthz", handlers.Healthz())
 	mux.HandleFunc("/events", handlers.EventHandler(ingestor))
