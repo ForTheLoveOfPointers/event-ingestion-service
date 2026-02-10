@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"crypto/sha256"
+	"crypto/subtle"
 	"errors"
 	"event-ingestion-service/internal/storage"
 	"log"
@@ -10,11 +12,6 @@ import (
 
 func APIKeyMiddleware(next http.Handler) http.HandlerFunc {
 
-	reverseKeyIndex := make(map[string]string)
-	for name, key := range storage.APIKeys {
-		reverseKeyIndex[key.Key] = name
-	}
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiToken, err := bearerToken(r)
 		if err != nil {
@@ -23,7 +20,16 @@ func APIKeyMiddleware(next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		if _, found := storage.APIKeys[apiToken]; !found {
+		found := false
+
+		for _, key := range storage.APIKeys {
+			if subtle.ConstantTimeCompare(key.KeyHash, apiToken) == 1 {
+				found = true
+				break
+			}
+		}
+
+		if !found {
 			http.Error(w, "Not a valid API key", http.StatusUnauthorized)
 			return
 		}
@@ -32,15 +38,15 @@ func APIKeyMiddleware(next http.Handler) http.HandlerFunc {
 	})
 }
 
-func bearerToken(r *http.Request) (string, error) {
+func bearerToken(r *http.Request) ([]byte, error) {
 	rawToken := r.Header.Get("Authorization")
 	pieces := strings.SplitN(rawToken, " ", 2)
 
 	if len(pieces) < 2 {
-		return "", errors.New("token with incorrect bearer format")
+		return []byte{}, errors.New("token with incorrect bearer format")
 	}
-
 	token := strings.TrimSpace(pieces[1])
-
-	return token, nil
+	h := sha256.Sum256([]byte(token))
+	hash := h[:]
+	return hash, nil
 }

@@ -1,2 +1,0 @@
-type APIKey struct {
-}
