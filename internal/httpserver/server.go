@@ -4,19 +4,22 @@ import (
 	"context"
 	"event-ingestion-service/internal/httpserver/handlers"
 	"event-ingestion-service/internal/httpserver/middleware"
+	"event-ingestion-service/internal/ingest"
 	"net/http"
 	"time"
 )
 
 type Server struct {
 	httpServer *http.Server
+	ingestor   *ingest.Ingest
 }
 
-func New(s string) *Server {
+func New(s string, bufferSize int) *Server {
 	mux := http.NewServeMux()
+	ingestor := ingest.New(bufferSize)
 
-	mux.HandleFunc("GET /healthz", handlers.Healthz())
-	mux.HandleFunc("POST /events", handlers.EventHandler())
+	mux.HandleFunc("/healthz", handlers.Healthz())
+	mux.HandleFunc("/events", handlers.EventHandler(ingestor))
 
 	return &Server{
 		httpServer: &http.Server{
@@ -27,6 +30,7 @@ func New(s string) *Server {
 			IdleTimeout:       60 * time.Second,
 			ReadHeaderTimeout: 2 * time.Second,
 		},
+		ingestor: ingestor,
 	}
 }
 

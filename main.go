@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -22,8 +23,14 @@ func main() {
 		log.Fatal("Error loading environment variables")
 	}
 
-	server := httpserver.New(os.Getenv("PORT"))
+	var bufferSz int
 
+	bufferSz, err := strconv.Atoi(os.Getenv("INGEST_BUFFER_SIZE"))
+	if err != nil {
+		bufferSz = 50
+	}
+
+	server := httpserver.New(os.Getenv("PORT"), bufferSz)
 	go func() {
 		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed starting the server: %s\r\n", err.Error())
