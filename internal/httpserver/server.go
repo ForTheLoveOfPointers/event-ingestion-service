@@ -14,11 +14,14 @@ type Server struct {
 	ingestor   *ingest.Ingest
 }
 
-func New(s string, bufferSize int, ctx context.Context) *Server {
+func New(s string, bufferSize int, ctx context.Context, wp *ingest.WorkerPool) *Server {
 	mux := http.NewServeMux()
 	ingestor := ingest.New(bufferSize)
+
 	batcher := ingest.Make(100, time.Second)
 	batcher.Start(ingestor, ctx)
+
+	wp.Start(batcher, ctx)
 
 	mux.HandleFunc("/healthz", handlers.Healthz())
 	mux.HandleFunc("/api-key", handlers.APIKeyGen())

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"event-ingestion-service/internal/httpserver"
+	"event-ingestion-service/internal/ingest"
 	"log"
 	"net/http"
 	"os"
@@ -30,7 +31,15 @@ func main() {
 		bufferSz = 50
 	}
 
-	server := httpserver.New(os.Getenv("PORT"), bufferSz, ctx)
+	workerPoolSz, err := strconv.Atoi(os.Getenv("WORKER_POOL_SIZE"))
+	if err != nil {
+		bufferSz = 50
+	}
+
+	wp := ingest.NewWorkerPool(workerPoolSz)
+	defer wp.Wait()
+
+	server := httpserver.New(os.Getenv("PORT"), bufferSz, ctx, wp)
 	go func() {
 		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed starting the server: %s\r\n", err.Error())

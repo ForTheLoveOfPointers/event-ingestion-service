@@ -21,7 +21,7 @@ of 500-1000 and no more than that when running dockerized.
 */
 func Make(maxSize int, flushInterval time.Duration) *Batcher {
 	return &Batcher{
-		EventBatch:    make([]types.Event, maxSize),
+		EventBatch:    make([]types.Event, 0, maxSize),
 		maxSize:       maxSize,
 		FlushInterval: flushInterval,
 		FlushChannel:  make(chan []types.Event, maxSize),

@@ -31,6 +31,7 @@ func EventHandler(ingestor *ingest.Ingest) http.HandlerFunc {
 		}
 
 		if res := ingestor.Enqueue(e); !res {
+			// Once I get observability, it could be a good idea to calculate the wait time based on current metrics
 			w.Header().Add("Retry-After", "60")
 			http.Error(w, "Event limit reached in queue.", http.StatusTooManyRequests)
 			return
