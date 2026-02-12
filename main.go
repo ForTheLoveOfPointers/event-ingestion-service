@@ -33,7 +33,7 @@ func main() {
 
 	workerPoolSz, err := strconv.Atoi(os.Getenv("WORKER_POOL_SIZE"))
 	if err != nil {
-		bufferSz = 50
+		workerPoolSz = 20
 	}
 
 	wp := ingest.NewWorkerPool(workerPoolSz)
