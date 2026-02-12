@@ -7,24 +7,31 @@ type Metric struct {
 	ReqDuration *prometheus.HistogramVec
 }
 
-func NewMetric(reg prometheus.Registerer) *Metric {
+const (
+	StatusSuccess string = "success"
+	StatusFailure string = "failure"
+)
+
+func NewMetric() *Metric {
 	m := &Metric{
 		EventRate: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "event_rate",
-				Help: "Number of ingested events",
+				Namespace: "event_ingestion",
+				Name:      "event_rate",
+				Help:      "Number of ingested events.",
 			},
-			[]string{"events"},
+			[]string{"status"},
 		),
 		ReqDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name: "ingest_request_duration_seconds",
-				Help: "Duration of ingestion requests in seconds",
+				Namespace: "event_ingestion",
+				Name:      "req_duration_milli",
+				Help:      "Duration of ingestion requests in ms.",
 			},
-			[]string{"seconds"},
+			[]string{"status"},
 		),
 	}
 
-	reg.MustRegister(m.EventRate, m.ReqDuration)
+	prometheus.MustRegister(m.EventRate, m.ReqDuration)
 	return m
 }

@@ -5,8 +5,11 @@ import (
 	"event-ingestion-service/internal/httpserver/handlers"
 	"event-ingestion-service/internal/httpserver/middleware"
 	"event-ingestion-service/internal/ingest"
+	"event-ingestion-service/internal/metrics"
 	"net/http"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Server struct {
@@ -17,6 +20,7 @@ type Server struct {
 func New(s string, bufferSize int, ctx context.Context, wp *ingest.WorkerPool) *Server {
 	mux := http.NewServeMux()
 	ingestor := ingest.New(bufferSize)
+	m := metrics.NewMetric()
 
 	batcher := ingest.Make(100, time.Second)
 	batcher.Start(ingestor, ctx)
@@ -25,7 +29,12 @@ func New(s string, bufferSize int, ctx context.Context, wp *ingest.WorkerPool) *
 
 	mux.HandleFunc("/healthz", handlers.Healthz())
 	mux.HandleFunc("/api-key", handlers.APIKeyGen())
-	mux.HandleFunc("/events", middleware.APIKeyMiddleware(handlers.EventHandler(ingestor)))
+	mux.HandleFunc("/events", middleware.APIKeyMiddleware(
+		handlers.EventHandler(ingestor, m),
+	),
+	)
+
+	mux.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
 
 	return &Server{
 		httpServer: &http.Server{

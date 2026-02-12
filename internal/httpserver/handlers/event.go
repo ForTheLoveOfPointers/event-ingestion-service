@@ -4,14 +4,36 @@ import (
 	"encoding/json"
 	"event-ingestion-service/internal/httpserver/types"
 	"event-ingestion-service/internal/ingest"
+	"event-ingestion-service/internal/metrics"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
-func EventHandler(ingestor *ingest.Ingest) http.HandlerFunc {
+func EventHandler(ingestor *ingest.Ingest, m *metrics.Metric) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		status := metrics.StatusSuccess
+
+		defer func() {
+			if err := recover(); err != nil {
+				status = metrics.StatusFailure
+			}
+
+			duration := time.Since(start).Milliseconds()
+
+			m.EventRate.
+				WithLabelValues(status).
+				Inc()
+
+			m.ReqDuration.
+				WithLabelValues(status).
+				Observe(float64(duration))
+
+		}()
+
 		if r.Method != "POST" {
 			http.Error(w, "Only POST method supported", http.StatusMethodNotAllowed)
 			return
