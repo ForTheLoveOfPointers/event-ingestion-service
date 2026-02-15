@@ -1,0 +1,19 @@
+syntax = "proto3";
+package rpc_server;
+option go_package = "rpcserver/";
+
+import "google/protobuf/timestamp.proto";
+
+message EventRequest {
+    string type = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    bytes payload = 3;
+}
+
+message IngestResponse {
+  string status = 1;
+}
+
+service EventIngestion {
+    rpc CreateEvent(EventRequest) returns (IngestResponse);
+}
