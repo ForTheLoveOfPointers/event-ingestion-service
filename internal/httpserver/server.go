@@ -17,10 +17,8 @@ type Server struct {
 	ingestor   *ingest.Ingest
 }
 
-func New(s string, bufferSize int, ctx context.Context, wp *ingest.WorkerPool) *Server {
+func New(s string, ctx context.Context, wp *ingest.WorkerPool, ingestor *ingest.Ingest, m *metrics.Metric) *Server {
 	mux := http.NewServeMux()
-	ingestor := ingest.New(bufferSize)
-	m := metrics.NewMetric()
 
 	batcher := ingest.Make(100, time.Second)
 	batcher.Start(ingestor, ctx)
